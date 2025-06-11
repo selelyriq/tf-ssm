@@ -1,6 +1,6 @@
 # Sleep
-# Wait 1 minute
-resource "time_sleep" "wait_60_seconds" {
+# Wait 4 minutes (how long it takes for instance to be ready)
+resource "time_sleep" "wait_240_seconds" {
   depends_on = [aws_instance.informatica_cluster]
 
   create_duration = "240s"
@@ -33,5 +33,82 @@ EOF
     aws_iam_role_policy_attachment.ssm_managed_instance_core,
     aws_iam_role_policy_attachment.cloudwatch_agent_server_policy,
     aws_iam_role_policy.cloudwatch_config_access
+  ]
+}
+
+resource "aws_ssm_association" "cloudwatch_config" {
+  name = aws_ssm_document.cloudwatch_config.name
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.informatica_cluster.id]
+  }
+
+  depends_on = [
+    aws_instance.informatica_cluster,
+    time_sleep.wait_240_seconds
+  ]
+}
+
+resource "aws_ssm_document" "hello_world" {
+  name            = "hello_world"
+  document_type   = "Command"
+  document_format = "YAML"
+  content         = <<EOF
+schemaVersion: '2.2'
+description: Hello World
+parameters: {}
+mainSteps:
+  - action: aws:runShellScript
+    name: helloWorld
+    inputs:
+      runCommand:
+        - echo "Hello, World!" > /tmp/hello_world.txt
+        - cat /tmp/hello_world.txt
+EOF
+}
+
+resource "aws_ssm_association" "hello_world" {
+  name = aws_ssm_document.hello_world.name
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.informatica_cluster.id]
+  }
+
+  depends_on = [
+    aws_instance.informatica_cluster,
+    time_sleep.wait_240_seconds
+  ]
+}
+
+resource "aws_ssm_document" "ping_google" {
+  name            = "ping_google"
+  document_type   = "Command"
+  document_format = "YAML"
+  content         = <<EOF
+schemaVersion: '2.2'
+description: Ping Google
+parameters: {}
+mainSteps:
+  - action: aws:runShellScript
+    name: pingGoogle
+    inputs:
+      runCommand:
+        - ping -c 4 google.com
+EOF
+}
+
+resource "aws_ssm_association" "ping_google" {
+  name = aws_ssm_document.ping_google.name
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.informatica_cluster.id]
+  }
+
+  depends_on = [
+    aws_instance.informatica_cluster,
+    time_sleep.wait_240_seconds
   ]
 }

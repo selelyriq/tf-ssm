@@ -1,5 +1,5 @@
 resource "aws_instance" "informatica_cluster" {
-  ami                    = "ami-02457590d33d576c3"
+  ami                    = "ami-0fa810ae39b368d14"
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.informatica_cluster.id]

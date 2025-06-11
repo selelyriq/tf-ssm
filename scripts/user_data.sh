@@ -23,6 +23,7 @@ sudo chmod 777 /tmp/df_output.txt
 sudo cat /tmp/df_output.txt
 
 # Verify mount and set permissions
+
 if mountpoint -q /opt/informatica_cluster; then
     chown 1000:1000 /opt/informatica_cluster
     chmod 755 /opt/informatica_cluster
@@ -31,4 +32,7 @@ else
     echo "Failed to mount EFS filesystem"
     exit 1
 fi
+
+# Persist EFS mount in /etc/fstab
+echo "${efs_id}:/ /opt/informatica_cluster efs tls,_netdev 0 0" | sudo tee -a /etc/fstab
 
