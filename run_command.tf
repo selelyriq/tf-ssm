@@ -50,57 +50,35 @@ resource "aws_ssm_association" "cloudwatch_config" {
   ]
 }
 
-resource "aws_ssm_document" "hello_world" {
-  name            = "hello_world"
-  document_type   = "Command"
-  document_format = "YAML"
-  content         = <<EOF
-schemaVersion: '2.2'
-description: Hello World
-parameters: {}
-mainSteps:
-  - action: aws:runShellScript
-    name: helloWorld
-    inputs:
-      runCommand:
-        - echo "Hello, World!" > /tmp/hello_world.txt
-        - cat /tmp/hello_world.txt
-EOF
-}
+resource "aws_ssm_document" "script_documents" {
+  for_each      = var.scripts
+  name          = each.key
+  document_type = "Command"
 
-resource "aws_ssm_association" "hello_world" {
-  name = aws_ssm_document.hello_world.name
-
-  targets {
-    key    = "InstanceIds"
-    values = [aws_instance.informatica_cluster.id]
-  }
+  content = jsonencode({
+    schemaVersion = "2.2"
+    description   = "Run ${each.key} script"
+    mainSteps = [
+      {
+        action = "aws:runShellScript"
+        name   = each.key
+        inputs = {
+          runCommand = split("\n", trimspace(file(each.value)))
+        }
+      }
+    ]
+  })
 
   depends_on = [
-    aws_instance.informatica_cluster,
-    time_sleep.wait_240_seconds
+    aws_iam_role_policy_attachment.ssm_managed_instance_core,
+    aws_iam_role_policy_attachment.cloudwatch_agent_server_policy,
+    aws_iam_role_policy.cloudwatch_config_access
   ]
 }
 
-resource "aws_ssm_document" "ping_google" {
-  name            = "ping_google"
-  document_type   = "Command"
-  document_format = "YAML"
-  content         = <<EOF
-schemaVersion: '2.2'
-description: Ping Google
-parameters: {}
-mainSteps:
-  - action: aws:runShellScript
-    name: pingGoogle
-    inputs:
-      runCommand:
-        - ping -c 4 google.com
-EOF
-}
-
-resource "aws_ssm_association" "ping_google" {
-  name = aws_ssm_document.ping_google.name
+resource "aws_ssm_association" "script_associations" {
+  for_each = var.scripts
+  name     = aws_ssm_document.script_documents[each.key].name
 
   targets {
     key    = "InstanceIds"

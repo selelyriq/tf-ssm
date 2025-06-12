@@ -1,3 +1,4 @@
+# Create a new EC2 instance
 resource "aws_instance" "informatica_cluster" {
   ami                    = "ami-0fa810ae39b368d14"
   instance_type          = "t2.micro"
