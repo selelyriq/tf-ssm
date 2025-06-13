@@ -1,7 +1,7 @@
 # Sleep
 # Wait 4 minutes (how long it takes for instance to be ready)
 resource "time_sleep" "wait_240_seconds" {
-  depends_on = [aws_instance.informatica_cluster]
+  depends_on = [var.instance_id]
 
   create_duration = "240s"
 }
@@ -41,11 +41,11 @@ resource "aws_ssm_association" "cloudwatch_config" {
 
   targets {
     key    = "InstanceIds"
-    values = [aws_instance.informatica_cluster.id]
+    values = [var.instance_id]
   }
 
   depends_on = [
-    aws_instance.informatica_cluster,
+    var.instance_id,
     time_sleep.wait_240_seconds
   ]
 }
@@ -82,11 +82,11 @@ resource "aws_ssm_association" "script_associations" {
 
   targets {
     key    = "InstanceIds"
-    values = [aws_instance.informatica_cluster.id]
+    values = [var.instance_id]
   }
 
   depends_on = [
-    aws_instance.informatica_cluster,
+    var.instance_id,
     time_sleep.wait_240_seconds
   ]
 }

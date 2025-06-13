@@ -1,24 +1,3 @@
-# Create a new EC2 instance
-resource "aws_instance" "informatica_cluster" {
-  ami                    = "ami-0fa810ae39b368d14"
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.informatica_cluster.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-
-  user_data = (templatefile("${path.module}/scripts/user_data.sh", {
-    efs_id = aws_efs_file_system.informatica_cluster.id
-    region = "us-east-1"
-  }))
-
-  tags = {
-    Name = "informatica-cluster"
-  }
-
-  depends_on = [
-    aws_efs_mount_target.informatica_cluster
-  ]
-}
 
 # IAM role for EC2 instance
 resource "aws_iam_role" "ec2_role" {

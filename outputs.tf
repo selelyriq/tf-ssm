@@ -1,29 +1,20 @@
-output "instance_id" {
-  description = "ID of the EC2 instance"
-  value       = aws_instance.informatica_cluster.id
+output "user_data_script" {
+  description = "User data script template for EC2 instances"
+  value = templatefile("${path.module}/scripts/user_data.sh", {
+    efs_id = var.efs_id
+    region = data.aws_region.current.name
+  })
 }
 
-output "instance_public_ip" {
-  description = "Public IP address of the EC2 instance"
-  value       = aws_instance.informatica_cluster.public_ip
+output "cloudwatch_config_document_name" {
+  description = "Name of the CloudWatch configuration SSM document"
+  value       = aws_ssm_document.cloudwatch_config.name
 }
 
-output "efs_id" {
-  description = "ID of the EFS filesystem"
-  value       = aws_efs_file_system.informatica_cluster.id
+output "script_document_names" {
+  description = "Names of the script SSM documents"
+  value       = { for k, v in aws_ssm_document.script_documents : k => v.name }
 }
 
-output "efs_dns_name" {
-  description = "DNS name of the EFS filesystem"
-  value       = aws_efs_file_system.informatica_cluster.dns_name
-}
-
-# output "efs_mount_target_dns_name" {
-#   description = "A map of EFS mount target DNS names, keyed by subnet ID"
-#   value       = { for subnet_id, mt in aws_efs_mount_target.informatica_cluster : subnet_id => mt.mount_target_dns_name }
-# }
-
-output "efs_access_point_id" {
-  description = "ID of the EFS access point"
-  value       = aws_efs_access_point.informatica_cluster.id
-}
+# Data source to get current region
+data "aws_region" "current" {} 
