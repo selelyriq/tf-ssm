@@ -35,7 +35,6 @@ module "ssm_automation" {
     ping_google     = "scripts/ping_google.sh"
     hello_world     = "scripts/hello_world.sh"
     setup_my_app    = "scripts/setup_application.sh"
-    run_diagnostics = "scripts/diagnostics.sh"
   }
 }
 

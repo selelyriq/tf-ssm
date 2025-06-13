@@ -3,6 +3,9 @@
     "metrics_collection_interval": 60,
     "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log"
   },
+  "append_dimensions": {
+    "InstanceId": "${aws:InstanceId}"
+  },
   "metrics": {
     "namespace": "CWAgent_Prod",
     "metrics_collected": {

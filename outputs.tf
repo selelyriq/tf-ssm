@@ -16,5 +16,10 @@ output "script_document_names" {
   value       = { for k, v in aws_ssm_document.script_documents : k => v.name }
 }
 
+output "ec2_profile_name" {
+  description = "Name of the EC2 profile"
+  value       = aws_iam_instance_profile.ec2_profile.name
+}
+
 # Data source to get current region
 data "aws_region" "current" {} 
