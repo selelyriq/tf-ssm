@@ -1,6 +1,8 @@
 # Sleep
 # Wait 4 minutes (how long it takes for instance to be ready)
 resource "time_sleep" "wait_240_seconds" {
+  depends_on = [var.instance_id]
+
   create_duration = "240s"
 }
 
@@ -38,11 +40,12 @@ resource "aws_ssm_association" "cloudwatch_config" {
   name = aws_ssm_document.cloudwatch_config.name
 
   targets {
-    key    = "tag:${var.target_key}"
-    values = var.target_values
+    key    = "InstanceIds"
+    values = [var.instance_id]
   }
 
   depends_on = [
+    var.instance_id,
     time_sleep.wait_240_seconds
   ]
 }
@@ -78,11 +81,12 @@ resource "aws_ssm_association" "script_associations" {
   name     = aws_ssm_document.script_documents[each.key].name
 
   targets {
-    key    = "tag:${var.target_key}"
-    values = var.target_values
+    key    = "InstanceIds"
+    values = [var.instance_id]
   }
 
   depends_on = [
+    var.instance_id,
     time_sleep.wait_240_seconds
   ]
 }
