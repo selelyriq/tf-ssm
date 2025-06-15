@@ -1,6 +1,12 @@
-variable "instance_id" {
-  description = "The ID of the instance to run the command on"
+variable "target_key" {
+  description = "The tag key to use for targeting instances (e.g., 'AutoScalingGroup')"
   type        = string
+  default     = "AutoScalingGroup"
+}
+
+variable "target_values" {
+  description = "List of tag values to target for the specified tag key"
+  type        = list(string)
 }
 
 variable "efs_id" {
