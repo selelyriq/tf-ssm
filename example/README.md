@@ -17,29 +17,51 @@ example/
 ## How It Works
 
 1. **Create Your Scripts**: Place your custom scripts in the `scripts/` directory
-2. **Configure Module**: In `main.tf`, reference your scripts via the `scripts` variable
+2. **Configure Module**: In `main.tf`, choose your targeting strategy and reference your scripts
 3. **Deploy**: Run `terraform apply` to deploy the infrastructure
 4. **Execution**: The SSM module will:
    - Create SSM documents for each script
    - Deploy the EFS mount user data script to instances
    - Configure CloudWatch monitoring
-   - Execute scripts on target instances
+   - Execute scripts on target instances (by instance ID or tag)
 
-## Workflow Example
+## Workflow Examples
 
+### Instance Targeting
 ```bash
 # 1. Add your custom scripts to the scripts directory
 echo '#!/bin/bash\necho "My custom script"' > scripts/my_script.sh
 
-# 2. Update main.tf to include your script
-# scripts = {
-#   my_script = "scripts/my_script.sh"
+# 2. Configure for instance targeting in main.tf
+# module "ssm_automation" {
+#   target_type = "instance"
+#   instance_id = aws_instance.example.id
+#   scripts = {
+#     my_script = "scripts/my_script.sh"
+#   }
 # }
 
 # 3. Deploy
-terraform init
-terraform plan
-terraform apply
+terraform init && terraform apply
+```
+
+### Tag Targeting (ASG)
+```bash
+# 1. Add your ASG-specific scripts
+echo '#!/bin/bash\necho "ASG health check"' > scripts/health_check.sh
+
+# 2. Configure for tag targeting in main.tf
+# module "ssm_automation" {
+#   target_type   = "tag"
+#   target_key    = "AutoScalingGroup"
+#   target_values = ["my-asg"]
+#   scripts = {
+#     health_check = "scripts/health_check.sh"
+#   }
+# }
+
+# 3. Deploy
+terraform init && terraform apply
 ```
 
 ## Built-in Features

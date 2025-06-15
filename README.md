@@ -13,56 +13,40 @@ This module provides flexible SSM automation capabilities for EC2 instances in A
 
 ## Usage
 
-### Basic Usage with AutoScaling Groups
+### Instance-Based Targeting (Traditional)
 
 ```hcl
 module "ssm_automation" {
   source = "./path/to/this/module"
   
-  # Tag targeting for AutoScaling Groups
+  # Instance targeting
+  target_type = "instance"
+  instance_id = aws_instance.example.id
+  efs_id      = aws_efs_file_system.example.id
+  
+  scripts = {
+    ping_google = "scripts/ping_google.sh"
+    hello_world = "scripts/hello_world.sh"
+    custom_app_setup = "scripts/setup_app.sh"
+  }
+}
+```
+
+### Tag-Based Targeting (Auto Scaling Groups)
+
+```hcl
+module "ssm_automation" {
+  source = "./path/to/this/module"
+  
+  # Tag targeting - perfect for ASGs
+  target_type   = "tag"
   target_key    = "AutoScalingGroup"
   target_values = ["my-asg-name"]
   efs_id        = aws_efs_file_system.example.id
   
   scripts = {
-    health_check    = "scripts/asg_health_check.sh"
-    app_setup      = "scripts/setup_application.sh"
-    monitoring     = "scripts/setup_monitoring.sh"
-  }
-}
-```
-
-### Multiple AutoScaling Groups
-
-```hcl
-module "ssm_automation" {
-  source = "./path/to/this/module"
-  
-  # Target multiple ASGs with same scripts
-  target_key    = "AutoScalingGroup"
-  target_values = ["web-asg", "api-asg", "worker-asg"]
-  efs_id        = aws_efs_file_system.example.id
-  
-  scripts = {
-    common_setup   = "scripts/common_setup.sh"
-    security_audit = "scripts/security_check.sh"
-  }
-}
-```
-
-### Custom Tag Targeting
-
-```hcl
-module "ssm_automation" {
-  source = "./path/to/this/module"
-  
-  # Use custom tag keys
-  target_key    = "Environment"
-  target_values = ["production", "staging"]
-  efs_id        = aws_efs_file_system.example.id
-  
-  scripts = {
-    env_setup = "scripts/environment_setup.sh"
+    health_check = "scripts/asg_health_check.sh"
+    scale_prep   = "scripts/prepare_for_scaling.sh"
   }
 }
 ```
@@ -79,38 +63,18 @@ module "ssm_automation" {
 ## Variables
 
 ### Required
-- `target_values` (list(string)): List of tag values to target
 - `efs_id` (string): The ID of the EFS filesystem to mount
+- `scripts` (map(string)): Map of script names to file paths (provided by root module)
 
-### Optional
-- `target_key` (string): The tag key to use for targeting (default: "AutoScalingGroup")
-- `scripts` (map(string)): Map of script names to file paths (default: {})
+### Targeting Options
+- `target_type` (string): Either "instance" or "tag" (default: "instance")
 
-## AutoScaling Group Configuration
+**For Instance Targeting:**
+- `instance_id` (string): The ID of the instance to run commands on
 
-Ensure your AutoScaling Group instances are properly tagged:
-
-```hcl
-resource "aws_autoscaling_group" "example" {
-  name                = "my-application-asg"
-  vpc_zone_identifier = var.subnet_ids
-  min_size            = 1
-  max_size            = 5
-  desired_capacity    = 2
-
-  launch_template {
-    id      = aws_launch_template.example.id
-    version = "$Latest"
-  }
-
-  # This tag will be used for SSM targeting
-  tag {
-    key                 = "AutoScalingGroup"
-    value               = "my-application-asg"
-    propagate_at_launch = true
-  }
-}
-```
+**For Tag Targeting:**
+- `target_key` (string): The tag key (e.g., "AutoScalingGroup")
+- `target_values` (list(string)): List of tag values to target
 
 ## Built-in Features
 
